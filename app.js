@@ -18,9 +18,13 @@ let redisClient;
 const proxyReq = async (req, res) => {
   const key = req.path;
 
-  let pageCount = await redisClient.get(key);
-  if (!pageCount) pageCount = 0;
-  await redisClient.set(key, Number(pageCount) + 1);
+  try {
+    let pageCount = await redisClient.get(key);
+    if (!pageCount) pageCount = 0;
+    await redisClient.set(key, Number(pageCount) + 1);
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 const apiProxy = createProxyMiddleware({
