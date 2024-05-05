@@ -1,37 +1,48 @@
-var createError = require("http-errors");
 var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+const { createClient } = require("redis");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+let redisClient;
+
+(async () => {
+  redisClient = await createClient({
+    password: "pWlixZe53HMj4O3DWyzB2pjpG9X2LIdh",
+    socket: {
+      host: "redis-18064.c93.us-east-1-3.ec2.redns.redis-cloud.com",
+      port: 18064,
+    },
+  }).connect();
+})();
+
+const proxyReq = async (req, res) => {
+  const key = req.path;
+
+  let pageCount = await redisClient.get(key);
+  if (!pageCount) pageCount = 0;
+  await redisClient.set(key, Number(pageCount) + 1);
+};
+
+const apiProxy = createProxyMiddleware({
+  target: "https://indiahike.cdn.prismic.io/api/",
+  changeOrigin: true,
+  on: {
+    proxyReq,
+  },
+});
 
 var app = express();
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render("error");
-});
+app.use("/api", apiProxy);
 
 module.exports = app;
+
+// dev build - 2251 prismic calls
+// prod build -
+
+//dev build times - 165
+//prod build times - 19
+
+// total dev calls = 2251 * 165 = 371415
+// total prod calls = 32589 * 19 = 619191
+
+// total prismic calls = 9,90,606
