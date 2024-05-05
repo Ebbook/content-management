@@ -1,15 +1,16 @@
 var express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const { createClient } = require("redis");
+require("dotenv").config();
 
 let redisClient;
 
 (async () => {
   redisClient = await createClient({
-    password: "pWlixZe53HMj4O3DWyzB2pjpG9X2LIdh",
+    password: process.env.REDIS_PASSWORD,
     socket: {
-      host: "redis-18064.c93.us-east-1-3.ec2.redns.redis-cloud.com",
-      port: 18064,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
     },
   }).connect();
 })();
@@ -23,7 +24,7 @@ const proxyReq = async (req, res) => {
 };
 
 const apiProxy = createProxyMiddleware({
-  target: "https://indiahike.cdn.prismic.io/api/",
+  target: process.env.PRISMIC_TARGET,
   changeOrigin: true,
   on: {
     proxyReq,
