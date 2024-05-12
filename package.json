@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www"
+    "start": "nodemon server.js"
   },
   "dependencies": {
     "debug": "~2.6.9",
@@ -13,5 +13,6 @@
   },
   "devDependencies": {
     "http-proxy-middleware": "^3.0.0"
-  }
+  },
+  "type": "module"
 }
